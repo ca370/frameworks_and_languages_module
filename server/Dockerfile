@@ -1,5 +1,9 @@
 FROM node
 
-# helllo
+WORKDIR /app/
 
-#WORKDIR /app/
+RUN npm install express
+
+COPY . . 
+
+ENTRYPOINT [ "node","Server.js" ]
