@@ -9,8 +9,8 @@ const port = 8000;
 // Test port if open
 
 app.get('/test_port', (req, res) => {
-
-  res.sendStatus(200);
+  console.log("IT WORKS!")
+  res.sendStatus(201);
 
 });
 
