@@ -5,104 +5,147 @@ const app = express();
 const port = 8000;
 
 
+// Enable CORS for any origin
 
-// Test port if open
+app.use((req, res, next) => {
 
-app.get('/test_port', (req, res) => {
-  console.log("IT WORKS!")
-  res.sendStatus(201);
+res.setHeader('Access-Control-Allow-Origin', '*');
 
-});
+res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
 
-
-
-// Base endpoint should return HTML
-
-app.get('/', (req, res) => {
-
-  res.setHeader('Content-Type', 'text/html');
-
-  res.send('<html><body>Hello, world!</body></html>');
+next();
 
 });
 
 
-
-// Handle item creation
-
-app.post('/item', (req, res) => {
-
-  // Process the item creation request
-
-  // ...
-
-  res.status(201).json({ id: 'item123' });
-
-});
+app.use(express.json());
 
 
+// A dictionary to store the items created
 
-// Handle item retrieval
-
-app.get('/item/:id', (req, res) => {
-
-  const itemId = req.params.id;
-
-  // Retrieve the item based on the ID
-
-  // ...
-
-  res.status(200).json({ id: itemId, /* item data */ });
-
-});
+const items = {};
 
 
+// Serve the modified HTML file
 
-// Handle item deletion
-
-app.delete('/item/:id', (req, res) => {
-
-  const itemId = req.params.id;
-
-  // Delete the item based on the ID
-
-  // ...
-
-  res.sendStatus(204);
-
-});
+app.use(express.static('public'));
 
 
-
-// Handle retrieving a list of items
+// Filter items by user ID or return all items
 
 app.get('/items', (req, res) => {
 
-  // Retrieve a list of items
+const { user_id } = req.query;
 
-  // ...
+if (user_id) {
 
-  res.status(200).json([/* list of items */]);
+const filteredItems = Object.values(items).filter(item => item.user_id === user_id);
+
+res.status(200).json(filteredItems);
+
+} else {
+
+res.status(200).json(Object.values(items));
+
+}
 
 });
 
+
+// Get a specific item by its ID
+
+app.get('/item/:id', (req, res) => {
+
+const { id } = req.params;
+
+if (items.hasOwnProperty(id)) {
+
+res.status(200).json(items[id]);
+
+} else {
+
+res.status(404).json({ message: 'Item not found' });
+
+}
+
+});
+
+
+// Create a new item
+
+app.post('/item', (req, res) => {
+
+const { user_id, description, keywords, lat, lon } = req.body;
+
+if (!user_id || !description || !keywords || !lat || !lon) {
+
+res.status(400).json({ message: 'Missing fields' });
+
+} else {
+
+const id = Object.keys(items).length + 1;
+
+const newItem = {
+
+id,
+
+user_id,
+
+description,
+
+keywords,
+
+lat,
+
+lon,
+
+date_from: new Date().toISOString().slice(0, 10),
+
+};
+
+items[id] = newItem;
+
+res.status(201).json(newItem);
+
+}
+
+});
+
+
+// Delete an item by its ID
+
+app.delete('/item/:id', (req, res) => {
+
+const { id } = req.params;
+
+if (items.hasOwnProperty(id)) {
+
+delete items[id];
+
+res.sendStatus(204);
+
+} else {
+
+res.status(404).json({ message: 'Item not found' });
+
+}
+
+});
 
 
 // Handle OPTIONS request for CORS
 
 app.options('*', (req, res) => {
 
-  res.setHeader('Access-Control-Allow-Methods', 'POST');
+res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
 
-  res.sendStatus(204);
+res.sendStatus(204);
 
 });
-
 
 
 app.listen(port, () => {
 
-  console.log(`Server listening at http://localhost:${port}`);
+console.log(`Server listening at http://localhost:${port}`);
 
 });
-

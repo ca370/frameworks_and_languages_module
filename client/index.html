@@ -1,0 +1,359 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+
+<head>
+
+<meta charset="utf-8">
+
+<link id="favicon" rel="shortcut icon" type="image/png" href="data:image/png;base64,....==" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<title>FreeCycle</title>
+
+<style>
+
+ul {
+
+list-style: none;
+
+}
+
+.navbar-brand {
+
+font-size: 3rem;
+
+}
+
+.card {
+
+width: 18rem;
+
+margin: 5px;
+
+}
+
+li {
+
+display: inline-block;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<div id="app">
+
+<nav class="navbar navbar-expand-sm bg-primary navbar-dark justify-content-center">
+
+<a class="navbar-brand"><strong>FREECYCLE</strong></a>
+
+</nav>
+
+<div class="container">
+
+<h3>Create an item:</h3>
+
+<form @submit.prevent="createItem">
+
+<div class="form-group">
+
+<label for="user_id">UserName:</label>
+
+<input v-model="item.user_id" name="user_id" id="user_id" type="text" placeholder="Name" class="form-control">
+
+</div>
+
+<div class="form-group">
+
+<label for="lat">Latitude:</label>
+
+<input v-model="item.lat" name="lat" id="lat" type="text" placeholder="Latitude" class="form-control">
+
+</div>
+
+<div class="form-group">
+
+<label for="lon">Longitude:</label>
+
+<input v-model="item.lon" name="lon" id="lon" type="text" placeholder="Longitude" class="form-control">
+
+</div>
+
+<div class="form-group">
+
+<label for="image">Image:</label>
+
+<input v-model="item.image" name="image" id="image" type="text" placeholder="Place a URL for an image"
+
+class="form-control">
+
+</div>
+
+<div class="form-group">
+
+<label for="keywords">Keywords:</label>
+
+<input v-model="item.keywords" name="keywords" id="keywords" type="text" placeholder="Keywords"
+
+class="form-control">
+
+</div>
+
+<div class="form-group">
+
+<label for="description">Description:</label>
+
+<textarea v-model="item.description" name="description" id="description" placeholder="Description"
+
+class="form-control"></textarea>
+
+</div>
+
+<button type="submit" class="btn btn-primary">Submit</button>
+
+</form>
+
+<h3>List of Items:</h3>
+
+<ul>
+
+<li v-for="item in items" :key="item.id">
+
+<div class="row">
+
+<div class="col-lg-4">
+
+<div class="card border-primary mb-3">
+
+<img :src="item.image" class="card-img-top">
+
+<div class="card-body">
+
+<h5 class="card-title">User Id: {{ item.user_id }}</h5>
+
+<p>List Id: {{ item.id }}</p>
+
+<p class="card-text">Keywords: {{ item.keywords }}</p>
+
+<p class="card-text">Latitude: {{ item.lat }}</p>
+
+<p class="card-text">Longitude: {{ item.lon }}</p>
+
+<p class="card-text">Date: {{ item.date_from }}</p>
+
+<p class="card-text">Description: {{ item.description }}</p>
+
+<button @click="deleteItem(item.id)" class="btn btn-primary">Delete</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+
+<script src="https://unpkg.com/vue@3.2.6/dist/vue.global.js"></script>
+
+<script>
+
+let API = '' //'https://8000-calaldees-frameworksand-6llomc5c9ej.ws-us101.gitpod.io' 
+
+const urlParams = new URLSearchParams(window.location.search); 
+
+const urlAPI = (urlParams.get('api') || DEFAULT_API).replace(/\/$/, ''); // Get api url (and remove trailing slash if present) 
+
+const DEFAULT_API = '/api/v1'; // default to current http(s)://currentHost:currentPort/api/v1'
+
+const app = Vue.createApp({
+
+data() {
+
+return {
+
+item: {
+
+user_id: '',
+
+keywords: '',
+
+lat: '',
+
+lon: '',
+
+image: '',
+
+description: '',
+
+},
+
+items: [],
+
+};
+
+},
+
+created() {
+
+this.clearItem();
+
+this.getItems();
+
+},
+
+methods: {
+
+clearItem() {
+
+this.item = {
+
+user_id: '',
+
+keywords: '',
+
+lat: '',
+
+lon: '',
+
+image: '',
+
+description: '',
+
+};
+
+},
+
+createItem() {
+
+fetch('/api/v1/item', {
+
+method: 'POST',
+
+headers: { 'Content-Type': 'application/json' },
+
+body: JSON.stringify(this.item),
+
+})
+
+.then(response => {
+
+if (response.ok) {
+
+return response.json();
+
+} else {
+
+throw new Error('Failed to create item.');
+
+}
+
+})
+
+.then(json => {
+
+console.log('createItem()', json);
+
+this.clearItem();
+
+this.getItems();
+
+})
+
+.catch(err => console.error(err));
+
+},
+
+getItems() {
+
+fetch('/api/v1/items', {
+
+method: 'GET',
+
+})
+
+.then(response => {
+
+if (response.ok) {
+
+return response.json();
+
+} else {
+
+throw new Error('Failed to retrieve items.');
+
+}
+
+})
+
+.then(data => {
+
+this.items = data;
+
+})
+
+.catch(err => console.error(err));
+
+},
+
+deleteItem(itemId) {
+
+fetch(`/api/v1/item/${itemId}`, {
+
+method: 'DELETE',
+
+})
+
+.then(response => {
+
+if (response.ok) {
+
+console.log('deleteItem()', { id: itemId });
+
+this.getItems();
+
+} else {
+
+throw new Error('Failed to delete item.');
+
+}
+
+})
+
+.catch(err => console.error(err));
+
+},
+
+},
+
+});
+
+
+app.mount('#app');
+
+</script>
+
+</body>
+
+
+</html>
